@@ -1,0 +1,24 @@
+name: Runner smoke test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: [self-hosted, gunner-smoke]
+    timeout-minutes: 10
+    steps:
+      - run: |
+          uname -m
+          docker version
+          docker buildx version
+      - name: Build a throwaway image on the host daemon
+        run: |
+          d="$(mktemp -d)"
+          printf 'FROM alpine:3.22\nRUN echo built-on-gunner\n' > "$d/Dockerfile"
+          docker build -t gunner-smoke:ci "$d"
+          docker run --rm gunner-smoke:ci echo ok
+          docker image rm gunner-smoke:ci

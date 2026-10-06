@@ -1,0 +1,26 @@
+# Self-hosted GitHub Actions runner, ephemeral: one job per container start.
+# Builds run on the host Docker daemon via the mounted socket, so the host's
+# image layer cache is shared between jobs for free.
+services:
+  runner:
+    image: myoung34/github-runner:2.337.0-ubuntu-noble
+    environment:
+      RUNNER_SCOPE: ${RUNNER_SCOPE:-repo}
+      REPO_URL: ${REPO_URL:?}
+      LABELS: ${LABELS:?}
+      RUNNER_NAME_PREFIX: ${RUNNER_NAME_PREFIX:-gunner}
+      EPHEMERAL: "1"
+      DISABLE_AUTO_UPDATE: "1"
+      # One of the two. ACCESS_TOKEN (PAT) is exchanged for a fresh registration
+      # token on every start; RUNNER_TOKEN is a raw registration token and dies
+      # after one hour, so it is only good for smoke tests.
+      ACCESS_TOKEN: ${ACCESS_TOKEN:-}
+      RUNNER_TOKEN: ${RUNNER_TOKEN:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

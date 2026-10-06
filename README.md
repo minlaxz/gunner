@@ -62,7 +62,9 @@ daemon and its cache. Add a final cleanup step so the host disk does not fill:
 
 ```yaml
       - if: always()
-        run: docker image prune -f --filter until=168h
+        run: |
+          docker image prune -f --filter until=168h
+          docker builder prune -f --filter until=168h
 ```
 
 ## Operate
